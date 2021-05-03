@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Services\Curs\CBRSource;
+use App\Services\Curs\CursSourceInterface;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        $this->app->bind(CursSourceInterface::class, function () {
+            return new CBRSource();
+        });
     }
 }
