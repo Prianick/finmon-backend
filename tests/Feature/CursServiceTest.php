@@ -23,6 +23,7 @@ class CursServiceTest extends TestCase
     {
         /** @var CursService $service */
         $service = $this->app->make(CursService::class);
+        $service->withCache = false;
         $curs = $service->getCurses(CursService::EUR, CursService::USD, (new Carbon()));
         $this->assertEquals(1.2162, $curs);
         $curs = $service->getCurses(CursService::USD, CursService::JPY, (new Carbon()));

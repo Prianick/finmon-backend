@@ -7,14 +7,18 @@ use Carbon\Carbon;
 
 class CBRSource implements CursSourceInterface
 {
-    const DAILY = 'http://www.cbr.ru/scripts/XML_daily.asp';
+    public string $dailyRoute;
+
+    public function __construct()
+    {
+        $this->dailyRoute = config('cursService.host') . config('cursService.tails.daily');
+    }
 
     public function getCurses(Carbon $date): array
     {
         $params = ['date_req' => $date->format('d/m/Y')];
-        $url = self::DAILY;
 
-        return $this->query($url, $params);
+        return $this->query($this->dailyRoute, $params);
     }
 
     protected function query(string $url, array $params)

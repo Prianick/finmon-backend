@@ -3,15 +3,13 @@
 namespace App\Services\Curs;
 
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class CursService
 {
     const DEFAULT_CURRENCY = 'RUB';
     const AUD = 'AUD';
     const RUB = 'RUB';
-    const GBP = 'GBP';
-    const BYR = 'BYR';
-    const DKK = 'DKK';
     const USD = 'USD';
     const EUR = 'EUR';
     const TRL = 'TRL';
@@ -20,19 +18,26 @@ class CursService
     const JPY = 'JPY';
     const SEK = 'SEK';
 
-    const CURRENCIES = [
-        self::AUD, self::GBP, self::BYR, self::DKK, self::USD, self::EUR, self::TRL, self::DEFAULT_CURRENCY
-    ];
+    public array $currencies = [];
+    public bool $withCache = true;
 
     protected CursSourceInterface $source;
 
     public function __construct(CursSourceInterface $source)
     {
         $this->source = $source;
+        $this->currencies = config('cursService.currencies');
+        $this->withCache = config('cursService.withCache');
     }
 
     public function getCurses(string $currencyCode1, string $currencyCode2, Carbon $date)
     {
+        $cacheKey = $currencyCode1 . $currencyCode2 . $date->format('Y-m-d');
+        $cache = Cache::store('redis')->get($cacheKey);
+        if (!empty($cache) && $this->withCache) {
+            return $cache;
+        }
+
         $currency1 = [];
         $currency2 = [];
 
@@ -44,7 +49,9 @@ class CursService
         }
 
         $curses = $this->source->getCurses($date);
+        $ss = [];
         foreach ($curses['Valute'] as $curs) {
+            $ss[] = $curs['CharCode'];
             if ($currencyCode1 == $curs['CharCode']) {
                 $currency1 = $curs;
             }
@@ -67,7 +74,10 @@ class CursService
             throw new \Exception('Currency(' . implode(',', $wrongCurrencies) . ') didn\'t find');
         }
 
-        return $this->calculate($currency1, $currency2);
+        $exchangeRate = $this->calculate($currency1, $currency2);
+        Cache::store('redis')->put($cacheKey, $exchangeRate, 3600 * 24);
+
+        return $exchangeRate;
     }
 
     protected function getRubParams()

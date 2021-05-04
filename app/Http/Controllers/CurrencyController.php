@@ -21,10 +21,10 @@ class CurrencyController extends Controller
 
     public function currencyList(Request $request)
     {
-        return response()->json(CursService::CURRENCIES);
+        return response()->json($this->cursService->currencies);
     }
 
-    public function exchangeRate(Request $request)
+    public function exchangeRate(ExchangeRateRequest $request)
     {
         $date = Carbon::createFromFormat('Y-m-d', $request->get('date'));
         $exchangeRate = $this->cursService->getCurses(
