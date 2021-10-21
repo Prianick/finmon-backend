@@ -33,7 +33,7 @@ class CursService
     public function getCurses(string $currencyCode1, string $currencyCode2, Carbon $date)
     {
         $cacheKey = $currencyCode1 . $currencyCode2 . $date->format('Y-m-d');
-        $cache = Cache::store('redis')->get($cacheKey);
+        $cache = Cache::store('file')->get($cacheKey);
         if (!empty($cache) && $this->withCache) {
             return $cache;
         }
@@ -75,7 +75,7 @@ class CursService
         }
 
         $exchangeRate = $this->calculate($currency1, $currency2);
-        Cache::store('redis')->put($cacheKey, $exchangeRate, 3600 * 24);
+        Cache::store('file')->put($cacheKey, $exchangeRate, 3600 * 24);
 
         return $exchangeRate;
     }
